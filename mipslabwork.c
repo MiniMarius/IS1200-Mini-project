@@ -259,14 +259,14 @@ void select_difficulty() {
 
 void draw_gamefield() {
   //draw ball
-	pixel_array(ball_posX, ball_posY, ball_size, ball_size);
+	set_array_of_pixels(ball_posX, ball_posY, ball_size, ball_size);
 	
   //draw center_line
-	pixel_array(center_line, 0, 0, 31);
+	set_array_of_pixels(center_line, 0, 0, 31);
 	
   //draw rackets
-	pixel_array(racket_1_posX, racket1_posY, 1, 8);
-	pixel_array(racket_2posX, racket_2_posY, 1, 8);
+	set_array_of_pixels(racket_1_posX, racket1_posY, 1, 8);
+	set_array_of_pixels(racket_2posX, racket_2_posY, 1, 8);
 	
   //display everything
 	convert_to_byte_array
