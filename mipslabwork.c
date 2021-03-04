@@ -20,8 +20,8 @@
 
 void user_isr();
 void labinit(void);
-void convert_array_to_display_format();
-void set_byte_array(int xPos, int yPos, int width, int height);
+void convert_to_byte_array();
+void set_array_of_pixels(int posX, int posY, int width, int height);
 void startup_animation();
 void show_surprise();
 void menu_select_mode();
@@ -43,8 +43,8 @@ void dance_animation(int a, int b);
 void labwork();
 
 //Global Variables
-uint8_t pixels[32][128];	//pixel array used for easy drawing
-uint8_t real_display[512]; //512 bytes used in display_image
+uint8_t pixel_array[32][128]; //pixel array used for easy placement of pixel_array
+uint8_t byte_array[512]; //byte array of 8 * 512 pixels used for display_image etc
 
 //playfield variable
 int center_line = 128 / 2;
@@ -83,35 +83,40 @@ void labinit( void ) {
 	TRISD = TRISD & 0x0fe0;
 }
 
-void convert_array_to_display_format() {
+//converts 2D-pixel array to 1D byte array
+void convert_to_byte_array() {
 	int page, column, row;
-	uint8_t shift_left = 1;
-	uint8_t display_number = 0;
+	uint8_t bit_setter = 1;
+	uint8_t byte_of_pixels = 0;
 
 	for (page = 0; page < 4; page++) {
 		for (column = 0; column < 128; column++) {
-			shift_left = 1;
-			display_number = 0;
+			bit_setter = 1;
+			byte_of_pixels = 0;
+			//inner loop is only for filling the 8 bit number
 			for (row = 0; row < 8; row++) {
-				if (pixels[8 * page + row][column]) {
-					display_number = display_number | shift_left;
+				//if bit is set in pixel array, put correct bit to 1 in byte array number
+				if (pixel_array[8 * page + row][column]) {
+					byte_of_pixels = byte_of_pixels | bit_setter;
 				}
-				shift_left <<= 1;
+				//sll to change bit position
+				bit_setter <<= 1;
 			}
-			real_display[column + page * 128] = display_number;
+			//pixel byte is put at correct position in byte_array
+			byte_array[column + (page * 128)] = byte_of_pixels;
 		}
 	}
 }
-
-void set_byte_array(int xPos, int yPos, int width, int height) {
+//Sets corresponding coordinate arguments ie bits (pixel_array) to 1
+void set_array_of_pixels(int posX, int posY, int width, int height) {
 	int row, column;
-	for (row = 0; row < 32; row++) { // y-axis
-  	for (column = 0; column < 128; column++) { // x-axis
-  		if (row >= yPos && row <= (yPos + height) && column >= xPos && column <= (xPos + width)) {
-  			pixels[row][column] = 1;
-  		}
-  	}
-  }
+	for (row = 0; row < 32; row++) { 
+		for (column = 0; column < 128; column++) { 
+			if (row >= posY && row <= (posY + height) && column >= posX && column <= (posX + width)) {
+				pixel_array[row][column] = 1;
+			}
+		}
+	}
 }
 
 void startup_animation() {
@@ -254,19 +259,19 @@ void select_difficulty() {
 
 void draw_gamefield() {
   //draw ball
-	set_byte_array(ball_posX, ball_posY, ball_size, ball_size);
+	pixel_array(ball_posX, ball_posY, ball_size, ball_size);
 	
   //draw center_line
-	set_byte_array(center_line, 0, 0, 31);
+	pixel_array(center_line, 0, 0, 31);
 	
   //draw rackets
-	set_byte_array(racket_1_posX, racket1_posY, 1, 8);
-	set_byte_array(racket_2posX, racket_2_posY, 1, 8);
+	pixel_array(racket_1_posX, racket1_posY, 1, 8);
+	pixel_array(racket_2posX, racket_2_posY, 1, 8);
 	
   //display everything
-	convert_array_to_display_format
+	convert_to_byte_array
 ();
-	display_image(0, real_display);
+	display_image(0, byte_array);
 }
 
 bool p1_upbutton_pressed() {
@@ -324,7 +329,7 @@ void clear_pixel_array() {
 	int row, column;
   	for (row = 0; row < 32; row++) { // y-axis
     	for (column = 0; column < 128; column++) { // x-axis
-    		pixels[row][column] = 0;
+    		pixel_array[row][column] = 0;
     	}
     }
 }
